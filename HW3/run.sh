@@ -1,3 +1,6 @@
-CLASSPATH=/Users/jiaqiangruan/CMU/SearchEngine/out/production/SearchEngine:/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-core-8.1.1.jar:/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/QryEvalExtensions.jar:/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-codecs-8.1.1.jar:/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-analyzers-common-8.1.1.jar
+ROOT=/Users/jiaqiangruan/tmp/SearchEngine
+HW=HW3
+LIB=$ROOT/lucene-8.1.1
+CLASSPATH=$LIB/*:$ROOT/$HW/bin
 
-java -classpath $CLASSPATH QryEval PARAM_DIR/HW2-Exp-2.1a.param
+java -cp $CLASSPATH QryEval $ROOT/$HW/QryEval/HW3-Exp-2a.param

@@ -11,19 +11,18 @@ import requests
 import pickle as pkl
 
 def getCMD(param_path):
-    CLASSPATH="/Users/jiaqiangruan/CMU/SearchEngine/out/production/SearchEngine:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-core-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/QryEvalExtensions.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-codecs-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-analyzers-common-8.1.1.jar"
+    ROOT="/Users/jiaqiangruan/tmp/SearchEngine"
+    HW="HW3"
+    LIB=ROOT+"/lucene-8.1.1"
+    CLASSPATH="%s/*:%s/%s/bin" % (LIB, ROOT, HW)
     cmd = "java -classpath %s QryEval %s" % (CLASSPATH, param_path)
     return cmd
 
 
 def test(output_path):
     userId = 'jruan@andrew.cmu.edu'
-    password = 'YOz4vZdm'
-    hwId = 'HW2'
+    password = 'Fu5P5isZ'
+    hwId = 'HW3'
     qrels = 'topics.701-850.qrel'
 
     #  Form parameters - these must match form parameters in the web page
@@ -63,26 +62,21 @@ def test(output_path):
     return ans
 
 
-param_text = """indexPath=INPUT_DIR/index-gov2
-queryFilePath=TEST_DIR/HW2-Exp-2.1c.qry
-trecEvalOutputPath=OUTPUT_DIR/HW2-Exp-2.1c.teIn
-trecEvalOutputLength=100
-retrievalAlgorithm=Indri
-Indri:mu=%d
-Indri:lambda=%f"""
+# param_text = """indexPath=INPUT_DIR/index-gov2
+# queryFilePath=TEST_DIR/HW2-Exp-2.1c.qry
+# trecEvalOutputPath=OUTPUT_DIR/HW2-Exp-2.1c.teIn
+# trecEvalOutputLength=100
+# retrievalAlgorithm=Indri
+# Indri:mu=%d
+# Indri:lambda=%f"""
 
 
-# ans = {}
-# for index in ("2.1a", "2.1b", "2.1c"):
-#     params_path = "PARAM_DIR/HW2-Exp-%s.param" % index
-#     output_path = 'OUTPUT_DIR/HW2-Exp-%s.teIn' % index
-#     os.system(getCMD(params_path))
-#     tmp = test(output_path)
-#     ans[index] = tmp
-#
-# with open('exp2.pkl', 'wb') as f:
-#     pkl.dump(ans, f)
-#
-# with open('exp2.pkl', 'rb') as f:
-#     ans = pkl.load(f)
-#     print(ans)
+ans = {}
+for index in ("1a", "1b", "1c"):
+    params_path = "TEST_DIR/HW3-Exp-%s.param" % index
+    output_path = 'OUTPUT_DIR/HW3-Exp-%s.teIn' % index
+    os.system(getCMD(params_path))
+    tmp = test(output_path)
+    ans[index] = tmp
+
+print(ans)
