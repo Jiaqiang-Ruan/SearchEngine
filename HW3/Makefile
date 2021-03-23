@@ -1,12 +1,7 @@
-all: dir build
-
-dir:
-	mkdir -p bin
-	ln -sfn ~/tmp/SearchEngine INPUT_DIR
-	ln -sfn QryEval TEST_DIR
+all: build
 
 build:
-	javac -Xlint -cp QryEval:../lucene-8.1.1/* -d bin QryEval/*.java
+	javac -Xlint -cp QryEval:../lucene-8.1.1/* -d . QryEval/*.java
 
 clean:
-	rm -r bin
+	rm -r bin *.class

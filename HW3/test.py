@@ -14,8 +14,9 @@ def getCMD(param_path):
     ROOT="/Users/jiaqiangruan/tmp/SearchEngine"
     HW="HW3"
     LIB=ROOT+"/lucene-8.1.1"
-    CLASSPATH="%s/*:%s/%s/bin" % (LIB, ROOT, HW)
-    cmd = "java -classpath %s QryEval %s" % (CLASSPATH, param_path)
+    CLASSPATH="%s/*:%s/%s" % (LIB, ROOT, HW)
+    PARAM_DIR="%s/%s/PARAM_DIR" %(ROOT, HW)
+    cmd = "java -classpath %s QryEval %s/%s" % (CLASSPATH, PARAM_DIR, param_path)
     return cmd
 
 
@@ -30,7 +31,7 @@ def test(output_path):
     url = 'https://boston.lti.cs.cmu.edu/classes/11-642/HW/HTS/tes.cgi'
     values = { 'hwid' : hwId,				# cgi parameter
                'qrel' : qrels,				# cgi parameter
-               'logtype' : 'Summary',			# cgi parameter
+               'logtype' : 'Detailed',			# cgi parameter
                'leaderboard' : 'No'				# cgi parameter
                }
 
@@ -49,6 +50,9 @@ def test(output_path):
     data = result.text
     data = data[data.index('<pre>'):data.index('</pre>')]
     data = data.split('\n')
+    print("--output: %s--\n"%output_path)
+    for line in data:
+        print(line.strip())
     ans = {}
     for line in data:
         if 'P_10 ' in line:
@@ -71,12 +75,36 @@ def test(output_path):
 # Indri:lambda=%f"""
 
 
-ans = {}
-for index in ("1a", "1b", "1c"):
-    params_path = "TEST_DIR/HW3-Exp-%s.param" % index
-    output_path = 'OUTPUT_DIR/HW3-Exp-%s.teIn' % index
-    os.system(getCMD(params_path))
-    tmp = test(output_path)
-    ans[index] = tmp
+total = {}
 
-print(ans)
+given = "given"
+output_path = "OUTPUT_DIR/HW3-Exp-0.teIn"
+tmp = test(output_path)
+total[given] = tmp
+
+# indexes = ["1a", "1b", "1c"]
+# indexes = ["2a","2b","2c","2d","2e"]
+# indexes = ["3a","3b","3c","3d","3e","3f"]
+indexes = ["4a","4b","4c","4d","4e","4f"]
+
+for index in indexes:
+    params_path = "HW3-Exp-%s.param" % index
+    output_path = 'OUTPUT_DIR/HW3-Exp-%s.teIn' % index
+    # os.system(getCMD(params_path))
+    tmp = test(output_path)
+    total[index] = tmp
+
+print(total)
+
+with open("result.csv", "w+") as f:
+    all_exp = [given]+indexes
+    first_line = ",".join(all_exp)
+    f.write(first_line+"\n")
+
+    metrics = ["P@10","P@20","P@30","MAP"]
+    for m in metrics:
+        res = []
+        for index in all_exp:
+            res.append("%.4f"%total[index][m])
+        line = ",".join(res)
+        f.write(line+"\n")
