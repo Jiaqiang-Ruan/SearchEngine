@@ -1,0 +1,5 @@
+indexPath=INPUT_DIR/index-gov2
+queryFilePath=TEST_DIR/HW1-Exp-4c.qry
+trecEvalOutputPath=OUTPUT_DIR/HW1-Exp-4c.teIn
+retrievalAlgorithm=RankedBoolean
+trecEvalOutputLength=100

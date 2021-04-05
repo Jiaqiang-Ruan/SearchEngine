@@ -1,0 +1,14 @@
+indexPath=INPUT_DIR/index-gov2
+queryFilePath=TEST_DIR/HW3-Exp-2c.qry
+trecEvalOutputPath=OUTPUT_DIR/HW3-Exp-2c.teIn
+trecEvalOutputLength=100
+retrievalAlgorithm=Indri
+Indri:mu=1500
+Indri:lambda=0.01
+fb=Indri
+fbDocs=30
+fbTerms=10
+fbMu=0
+fbOrigWeight=0.5
+fbExpansionQueryFile=OUTPUT_DIR/HW3-Exp-2c.qryOut
+#fbInitialRankingFile=TEST_DIR/HW3-Exp.fbRank
