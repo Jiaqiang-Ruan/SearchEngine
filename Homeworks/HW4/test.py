@@ -92,8 +92,9 @@ total = {}
 
 # indexes = ["1a", "1b", "1c"]
 # indexes = ["2a","2b","2c","2d"]
-indexes = ["3a","3b","3c","3d"]
-# indexes = ["4a","4b","4c","4d","4e","4f"]
+# indexes = ["3a","3b","3c","3d"]
+# indexes = ["4a","4b", "4c"]
+indexes = ["4e"]
 
 for index in indexes:
     params_path = "HW4-Exp-%s.param" % index
@@ -104,7 +105,7 @@ for index in indexes:
 
 print(total)
 
-with open("result-Exp1.csv", "w+") as f:
+with open("result-Exp5.csv", "w+") as f:
     all_exp = indexes
     first_line = ",".join(all_exp)
     f.write(first_line+"\n")
