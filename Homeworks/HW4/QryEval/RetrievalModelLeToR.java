@@ -40,7 +40,7 @@ public class RetrievalModelLeToR extends RetrievalModel {
   }
 
   private double[] getFeat(String query, int docId) {
-    double[] feat = new double[16];
+    double[] feat = new double[18];
     // f1
     try{
       feat[0] = (double) Float.parseFloat(Idx.getAttribute("spamScore", docId));
@@ -82,15 +82,15 @@ public class RetrievalModelLeToR extends RetrievalModel {
       feat[6+3*i] = overlapScore(query, docId, fields[i]);
     }
 
-    // // f17 customize
-    // try {
-    //   feat[16] = Double.parseDouble(Idx.getAttribute("date", docId));
-    // } catch (Exception e) {
-    //   feat[16] = Double.MIN_VALUE;
-    // }
+    // f17 customize
+    try {
+      feat[16] = Double.parseDouble(Idx.getAttribute("date", docId));
+    } catch (Exception e) {
+      feat[16] = Double.MIN_VALUE;
+    }
 
-    // // f18 customize
-    // feat[17] = posStd(query, docId, "body");
+    // f18 customize
+    feat[17] = posStd(query, docId, "body");
 
     return feat;
   }

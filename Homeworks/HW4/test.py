@@ -11,8 +11,8 @@ import requests
 import pickle as pkl
 
 def getCMD(param_path):
-    ROOT="/Users/jiaqiangruan/tmp/SearchEngine"
-    HW="HW3"
+    ROOT="/Users/jiaqiangruan/Projects/SearchEngine/Homeworks"
+    HW="HW4"
     LIB=ROOT+"/lucene-8.1.1"
     CLASSPATH="%s/*:%s/%s" % (LIB, ROOT, HW)
     PARAM_DIR="%s/%s/PARAM_DIR" %(ROOT, HW)
@@ -23,8 +23,8 @@ def getCMD(param_path):
 def test(output_path):
     userId = 'jruan@andrew.cmu.edu'
     password = 'Fu5P5isZ'
-    hwId = 'HW3'
-    qrels = 'topics.701-850.qrel'
+    hwId = 'HW4'
+    qrels = "cw09a.adhoc.1-200.qrel.indexed"
 
     #  Form parameters - these must match form parameters in the web page
 
@@ -44,6 +44,8 @@ def test(output_path):
 
     # print (result.text.replace ('<br />', '\n'))
     # data = result.text.split('<br />')
+    # print(data)
+    # while 1: pass
     # for line in data:
     #     if "P_10" in line:
     #         print(line)
@@ -63,6 +65,12 @@ def test(output_path):
             ans['P@30'] = float(line.split()[2])
         if 'map ' in line:
             ans['MAP'] = float(line.split()[2])
+        if 'ndcg_cut_10 ' in line:
+            ans['ndcg_cut_10'] = float(line.split()[2])
+        if 'ndcg_cut_20 ' in line:
+            ans['ndcg_cut_20'] = float(line.split()[2])
+        if 'ndcg_cut_30 ' in line:
+            ans['ndcg_cut_30'] = float(line.split()[2])
     return ans
 
 
@@ -77,31 +85,31 @@ def test(output_path):
 
 total = {}
 
-given = "given"
-output_path = "OUTPUT_DIR/HW3-Exp-0.teIn"
-tmp = test(output_path)
-total[given] = tmp
+# given = "given"
+# output_path = "OUTPUT_DIR/HW3-Exp-0.teIn"
+# tmp = test(output_path)
+# total[given] = tmp
 
 # indexes = ["1a", "1b", "1c"]
-# indexes = ["2a","2b","2c","2d","2e"]
-# indexes = ["3a","3b","3c","3d","3e","3f"]
-indexes = ["4a","4b","4c","4d","4e","4f"]
+# indexes = ["2a","2b","2c","2d"]
+indexes = ["3a","3b","3c","3d"]
+# indexes = ["4a","4b","4c","4d","4e","4f"]
 
 for index in indexes:
-    params_path = "HW3-Exp-%s.param" % index
-    output_path = 'OUTPUT_DIR/HW3-Exp-%s.teIn' % index
-    # os.system(getCMD(params_path))
+    params_path = "HW4-Exp-%s.param" % index
+    output_path = 'OUTPUT_DIR/HW4-Exp-%s.teIn' % index
+    os.system(getCMD(params_path))
     tmp = test(output_path)
     total[index] = tmp
 
 print(total)
 
-with open("result.csv", "w+") as f:
-    all_exp = [given]+indexes
+with open("result-Exp1.csv", "w+") as f:
+    all_exp = indexes
     first_line = ",".join(all_exp)
     f.write(first_line+"\n")
 
-    metrics = ["P@10","P@20","P@30","MAP"]
+    metrics = ["P@10","P@20","P@30","ndcg_cut_10","ndcg_cut_20","ndcg_cut_30","MAP"]
     for m in metrics:
         res = []
         for index in all_exp:
