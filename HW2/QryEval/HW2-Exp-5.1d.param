@@ -1,7 +1,0 @@
-indexPath=INPUT_DIR/index-gov2
-queryFilePath=TEST_DIR/HW2-Exp-5.1d.qry
-trecEvalOutputPath=OUTPUT_DIR/HW2-Exp-5.1d.teIn
-trecEvalOutputLength=100
-retrievalAlgorithm=Indri
-Indri:mu=1500
-Indri:lambda=0.01

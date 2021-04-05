@@ -1,9 +1,12 @@
-
+.ipynb_checkpoints
 
 .DS_Store
 .vscode
 *_DIR
 index-gov2
+lucene-8.1.1
+index-cw09
+svm_rank*
 
 # Compiled class file
 *.class

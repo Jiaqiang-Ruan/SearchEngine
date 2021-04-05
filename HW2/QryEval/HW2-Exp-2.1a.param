@@ -1,5 +1,0 @@
-indexPath=INPUT_DIR/index-gov2
-queryFilePath=TEST_DIR/HW2-Exp-2.1a.qry
-trecEvalOutputPath=OUTPUT_DIR/HW2-Exp-2.1a.teIn
-trecEvalOutputLength=100
-retrievalAlgorithm=RankedBoolean
