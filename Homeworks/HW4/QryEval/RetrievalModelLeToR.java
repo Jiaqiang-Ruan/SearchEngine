@@ -40,7 +40,7 @@ public class RetrievalModelLeToR extends RetrievalModel {
   }
 
   private double[] getFeat(String query, int docId) {
-    double[] feat = new double[18];
+    double[] feat = new double[16];
     // f1
     try{
       feat[0] = (double) Float.parseFloat(Idx.getAttribute("spamScore", docId));
@@ -82,15 +82,15 @@ public class RetrievalModelLeToR extends RetrievalModel {
       feat[6+3*i] = overlapScore(query, docId, fields[i]);
     }
 
-    // f17 customize
-    try {
-      feat[16] = Double.parseDouble(Idx.getAttribute("date", docId));
-    } catch (Exception e) {
-      feat[16] = Double.MIN_VALUE;
-    }
+    // // f17 customize
+    // try {
+    //   feat[16] = Double.parseDouble(Idx.getAttribute("date", docId));
+    // } catch (Exception e) {
+    //   feat[16] = Double.MIN_VALUE;
+    // }
 
-    // f18 customize
-    feat[17] = posStd(query, docId, "body");
+    // // f18 customize
+    // feat[17] = posStd(query, docId, "body");
 
     return feat;
   }
@@ -366,7 +366,6 @@ public class RetrievalModelLeToR extends RetrievalModel {
     Map<String, Map<String, Double>> info = new HashMap<>();
     List<String> uniqueQids = new ArrayList<>();
     List<String> qids = new ArrayList<>();
-    List<double[]> feats = new ArrayList<>();
     List<String> externalDocids = new ArrayList<>();
 
     try {
@@ -386,6 +385,8 @@ public class RetrievalModelLeToR extends RetrievalModel {
 
       // prepare svm data
       String qLine = null;
+      List<double[]> feats = new ArrayList<>();
+      List<String> tmpExternalDocids = new ArrayList<>();
       while ((qLine = testQryReader.readLine()) != null) {
         System.out.println("Query " + qLine);
         String[] pair = qLine.split(":");
@@ -409,23 +410,20 @@ public class RetrievalModelLeToR extends RetrievalModel {
           feats.add(feat);
           qids.add(qid);
           externalDocids.add(externalDocid);
-
+          tmpExternalDocids.add(externalDocid);
         }
-      }
 
-      normalize(feats);
-
-      for (int i=0;i<qids.size();i++) {
-        String qid = qids.get(i);
-        double[] feat = feats.get(i);
-        String externalDocid = externalDocids.get(i);
-        String line = svm_line("0", qid, feat, externalDocid);
-        testFeatWirter.write(line);
+        normalize(feats);
+        for (int i=0;i<feats.size();i++) {
+          String line = svm_line("0", qid, feats.get(i), tmpExternalDocids.get(i));
+          testFeatWirter.write(line);
+        }
+        feats.clear();
+        tmpExternalDocids.clear();
       }
 
       testQryReader.close();
       testFeatWirter.close();
-
 
       // test svm
       String svmRankClassifyPath = params.get("letor:svmRankClassifyPath");
