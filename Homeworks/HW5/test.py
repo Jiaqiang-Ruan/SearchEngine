@@ -9,29 +9,30 @@
 import os
 import requests
 import pickle as pkl
+from collections import defaultdict
 
 def getCMD(param_path):
-    CLASSPATH="/Users/jiaqiangruan/CMU/SearchEngine/out/production/SearchEngine:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-core-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/QryEvalExtensions.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-codecs-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/lucene-8.1.1/lucene-analyzers-common-8.1.1.jar"
-    cmd = "java -classpath %s QryEval %s" % (CLASSPATH, param_path)
+    ROOT="/Users/jiaqiangruan/Projects/SearchEngine/Homeworks"
+    HW="HW5"
+    LIB=ROOT+"/lucene-8.1.1"
+    CLASSPATH="%s/*:%s/%s" % (LIB, ROOT, HW)
+    PARAM_DIR="%s/%s/PARAM_DIR" %(ROOT, HW)
+    cmd = "java -classpath %s QryEval %s/%s" % (CLASSPATH, PARAM_DIR, param_path)
     return cmd
 
 
-def test(output_path):
+def get_trec_eval(output_path):
     userId = 'jruan@andrew.cmu.edu'
-    password = 'YOz4vZdm'
-    hwId = 'HW4'
-    qrels = "cw09a.adhoc.1-200.qrel.indexed"
+    password = 'Fu5P5isZ'
+    hwId = 'HW5'
+    qrels = 'cw09a.adhoc.1-200.qrel.indexed'
 
     #  Form parameters - these must match form parameters in the web page
 
     url = 'https://boston.lti.cs.cmu.edu/classes/11-642/HW/HTS/tes.cgi'
     values = { 'hwid' : hwId,				# cgi parameter
                'qrel' : qrels,				# cgi parameter
-               'logtype' : 'Summary',			# cgi parameter
+               'logtype' : 'Detailed',			# cgi parameter
                'leaderboard' : 'No'				# cgi parameter
                }
 
@@ -43,14 +44,20 @@ def test(output_path):
     #  Replace the <br /> with \n for clarity
 
     # print (result.text.replace ('<br />', '\n'))
-    # data = result.text.split('<br />')
+    data = result.text
+    # print(data)
+    # while 1: pass
     # for line in data:
     #     if "P_10" in line:
     #         print(line)
+    
     data = result.text
-    # print(data)
     data = data[data.index('<pre>'):data.index('</pre>')]
     data = data.split('\n')
+
+    print("--output: %s--\n"%output_path)
+    for line in data:
+        print(line.strip())
     ans = {}
     for line in data:
         if 'P_10 ' in line:
@@ -69,30 +76,69 @@ def test(output_path):
             ans['ndcg_cut_30'] = float(line.split()[2])
     return ans
 
+def get_ndeval_eval(output_path):
+    userId = 'jruan@andrew.cmu.edu'
+    password = 'Fu5P5isZ'
 
-# param_text = """indexPath=INPUT_DIR/index-gov2
-# queryFilePath=TEST_DIR/HW2-Exp-2.1c.qry
-# trecEvalOutputPath=OUTPUT_DIR/HW2-Exp-2.1c.teIn
-# trecEvalOutputLength=100
-# retrievalAlgorithm=Indri
-# Indri:mu=%d
-# Indri:lambda=%f"""
+    #  Form parameters - these must match form parameters in the web page
+
+    url = 'https://boston.lti.cs.cmu.edu/classes/11-642/HW/HTS/nes.cgi'
+    values = {'qrel' : 'cw09a.diversity.101-200.qrel.indexed',
+              'hwid' : 'HW5'
+             }
 
 
-ans = {}
-# for index in ("1a", "1b", "1c", "3a", "3b", "3c", "3d"):
-for index in ("4e",):
-    params_path = "PARAM_DIR/HW4-Exp-%s.param" % index
-    output_path = 'OUTPUT_DIR/HW4-Exp-%s.teIn' % index
+    #  Make the request
+
+    files = {'infile' : (output_path, open(output_path, 'rb')) }
+    result = requests.post (url, data=values, files=files, auth=(userId, password))
+
+    data = result.text
+    
+    data = data[data.index('<pre>')+len('<pre>'):data.index('</pre>')].strip()
+    data = data.split('\n')
+    print(data)
+    ans = defaultdict(dict)
+    for line in data[1:]:
+        tokens = line.split(',')
+
+        if len(tokens) !=23 :continue
+        ans[tokens[1]]['P-IA@10'] = float(tokens[18])
+        ans[tokens[1]]['P-IA@20'] = float(tokens[19])
+        ans[tokens[1]]['aNDCG@20'] = float(tokens[13])
+
+    return ans
+
+
+
+total = {}
+
+
+# indexes = ["1a", "1b", "1c"]
+# indexes = ["2a","2b","2c","2d"]
+# indexes = ["3a","3b","3c","3d"]
+# indexes = ["4a","4b", "4c"]
+indexes = ["2.1a"]
+
+for index in indexes:
+    params_path = "HW5-Exp-%s.param" % index
+    output_path = 'OUTPUT_DIR/HW5-Exp-%s.teIn' % index
     os.system(getCMD(params_path))
-    tmp = test(output_path)
-    ans[index] = tmp
+    tmp = get_trec_eval(output_path)
+    total[index] = tmp
+    get_ndeval_eval(output_path)
 
-print(ans)
-#
-# with open('exp2.pkl', 'wb') as f:
-#     pkl.dump(ans, f)
-#
-# with open('exp2.pkl', 'rb') as f:
-#     ans = pkl.load(f)
-#     print(ans)
+# print(total)
+
+# with open("result-Exp1.csv", "w+") as f:
+#     all_exp = indexes
+#     first_line = ",".join(all_exp)
+#     f.write(first_line+"\n")
+
+#     metrics = ["P@10","P@20","P@30","ndcg_cut_10","ndcg_cut_20","ndcg_cut_30","MAP"]
+#     for m in metrics:
+#         res = []
+#         for index in all_exp:
+#             res.append("%.4f"%total[index][m])
+#         line = ",".join(res)
+#         f.write(line+"\n")
