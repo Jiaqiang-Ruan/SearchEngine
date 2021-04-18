@@ -1,0 +1,17 @@
+indexPath=INPUT_DIR/index-cw09
+queryFilePath=TEST_DIR/HW5-Exp.qry
+trecEvalOutputPath=OUTPUT_DIR/HW5-Exp-3.1d.teIn
+trecEvalOutputLength=100
+retrievalAlgorithm=Indri
+Indri:mu=1500
+Indri:lambda=0.1
+BM25:b=0.75
+BM25:k_1=1.2
+BM25:k_3=0.0
+diversity=true
+diversity:algorithm=pm2
+diversity:initialRankingFile=TEST_DIR/HW5-Exp-Indri.inRanks
+diversity:maxInputRankingsLength=100
+diversity:maxResultRankingLength=50
+diversity:lambda=1.0
+diversity:intentsFile=TEST_DIR/HW5-Exp.intents
