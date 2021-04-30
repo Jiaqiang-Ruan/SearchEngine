@@ -11,20 +11,18 @@ import requests
 import pickle as pkl
 
 def getCMD(param_path):
-    CLASSPATH="/Users/jiaqiangruan/CMU/SearchEngine/out/production/SearchEngine:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/libs/lucene-8.1.1/lucene-core-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/libs/lucene-8.1.1/QryEvalExtensions.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/libs/lucene-8.1.1/lucene-codecs-8.1.1.jar:"+ \
-              "/Users/jiaqiangruan/CMU/SearchEngine/libs/lucene-8.1.1/lucene-analyzers-common-8.1.1.jar:" + \
-              "/Users/jiaqiangruan/CMU/SearchEngine/libs/jblas-1.2.4.jar"
-
-    cmd = "java -classpath %s QryEval %s" % (CLASSPATH, param_path)
+    ROOT="/Users/jiaqiangruan/Projects/SearchEngine/Homeworks"
+    HW="HW6"
+    LIB=ROOT+"/lucene-8.1.1"
+    CLASSPATH="%s/*:%s/%s" % (LIB, ROOT, HW)
+    PARAM_DIR="%s/%s/PARAM_DIR" %(ROOT, HW)
+    cmd = "java -classpath %s QryEval %s/%s" % (CLASSPATH, PARAM_DIR, param_path)
     return cmd
 
 
 def test(output_path):
     userId = 'jruan@andrew.cmu.edu'
-    password = 'YOz4vZdm'
+    password = 'Fu5P5isZ'
     hwId = 'HW6'
     qrels = "cw09a.adhoc.1-200.qrel.indexed"
 
@@ -88,8 +86,8 @@ for index in indexes:
     params_path = "PARAM_DIR/HW6-Exp-%s.param" % index
     output_path = 'OUTPUT_DIR/HW6-Exp-%s.teIn' % index
     os.system(getCMD(params_path))
-    tmp = test(output_path)
-    ans[index] = tmp
+    # tmp = test(output_path)
+    # ans[index] = tmp
 
 for index in indexes:
     print("=========%s========" %index)

@@ -45,11 +45,11 @@ public class RetrievalModelDRMM {
         // train
         train(params, trainRel, trainNonRel, trainIdfWts);
 
-//        try {
-//            this.mlp.save("wts.txt");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+       try {
+           this.mlp.save("wts.txt");
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
 
         // Create testX
         Map<String, Map<Integer, FloatMatrix>> testRepresent = new HashMap<>();
