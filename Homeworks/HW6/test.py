@@ -15,7 +15,7 @@ def getCMD(param_path):
     HW="HW6"
     LIB=ROOT+"/lucene-8.1.1"
     CLASSPATH="%s/*:%s/%s" % (LIB, ROOT, HW)
-    PARAM_DIR="%s/%s/PARAM_DIR" %(ROOT, HW)
+    PARAM_DIR="%s/%s" %(ROOT, HW)
     cmd = "java -classpath %s QryEval %s/%s" % (CLASSPATH, PARAM_DIR, param_path)
     return cmd
 
@@ -78,21 +78,23 @@ def test(output_path):
 # Indri:mu=%d
 # Indri:lambda=%f"""
 
+params_path = "PARAM_DIR/HW6-Train-0.param"
+os.system(getCMD(params_path))
 
-ans = {}
-# for index in ("1a", "1b", "1c", "3a", "3b", "3c", "3d"):
-indexes = ("5.1a","5.1b","5.1c","5.1d") #("4.1a","4.1b","4.1c","4.1d",)#"3.1a","3.1b","3.1c","3.1d","3.1e","3.2a","3.2b","3.2c","3.2d","3.2e",) #,"2.1b","2.1c","2.1d",):
-for index in indexes:
-    params_path = "PARAM_DIR/HW6-Exp-%s.param" % index
-    output_path = 'OUTPUT_DIR/HW6-Exp-%s.teIn' % index
-    os.system(getCMD(params_path))
-    # tmp = test(output_path)
-    # ans[index] = tmp
+# ans = {}
+# # for index in ("1a", "1b", "1c", "3a", "3b", "3c", "3d"):
+# indexes = ("5.1a","5.1b","5.1c","5.1d") #("4.1a","4.1b","4.1c","4.1d",)#"3.1a","3.1b","3.1c","3.1d","3.1e","3.2a","3.2b","3.2c","3.2d","3.2e",) #,"2.1b","2.1c","2.1d",):
+# for index in indexes:
+#     params_path = "PARAM_DIR/HW6-Exp-%s.param" % index
+#     output_path = 'OUTPUT_DIR/HW6-Exp-%s.teIn' % index
+#     os.system(getCMD(params_path))
+#     # tmp = test(output_path)
+#     # ans[index] = tmp
 
-for index in indexes:
-    print("=========%s========" %index)
-    for metrix in ('P@10','P@20','P@30', 'ndcg_cut_10', 'ndcg_cut_20', 'ndcg_cut_30', 'MAP'):
-        print(ans[index][metrix])
+# for index in indexes:
+#     print("=========%s========" %index)
+#     for metrix in ('P@10','P@20','P@30', 'ndcg_cut_10', 'ndcg_cut_20', 'ndcg_cut_30', 'MAP'):
+#         print(ans[index][metrix])
 #
 # with open('exp2.pkl', 'wb') as f:
 #     pkl.dump(ans, f)

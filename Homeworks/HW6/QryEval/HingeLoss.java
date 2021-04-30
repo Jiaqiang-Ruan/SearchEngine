@@ -10,8 +10,10 @@ public class HingeLoss extends Criterion {
     }
 
     public FloatMatrix forward(FloatMatrix relScore, FloatMatrix nonRelScore) {
-        this.loss = relScore.rsub(1.0F).add(nonRelScore).max(0F);
+        FloatMatrix actualLoss = nonRelScore.add(this.margin).sub(relScore);
+        this.loss = actualLoss.max(0.0F);
         return this.loss;
+
     }
 
 

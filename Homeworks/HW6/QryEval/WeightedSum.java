@@ -1,5 +1,6 @@
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
+import org.jblas.SimpleBlas;
 
 public class WeightedSum {
 
@@ -10,7 +11,10 @@ public class WeightedSum {
 
     public FloatMatrix forward(FloatMatrix rel, FloatMatrix nonRel, FloatMatrix idfWts) {
         this.idfWts = idfWts;
-        return new FloatMatrix(2, 1, rel.mul(idfWts).sum(), nonRel.mul(idfWts).sum());
+        float newRelScores = rel.mul(this.idfWts).sum();
+        float newNonRelScores = nonRel.mul(this.idfWts).sum();
+        FloatMatrix scores = new FloatMatrix(new float[]{newRelScores, newNonRelScores});
+        return scores;
     }
 
     public FloatMatrix backward(FloatMatrix delta) {

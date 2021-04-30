@@ -23,12 +23,14 @@ public class Linear {
         this.db = FloatMatrix.zeros(1, out_features);
         this.sqW = FloatMatrix.zeros(this.W.rows, this.W.columns);
         this.sqb = FloatMatrix.zeros(this.b.rows, this.b.columns);
+
+
     }
 
     public FloatMatrix forward(FloatMatrix x) {
         this.x = x;
-        return x.mmul(this.W).addRowVector(this.b);
-
+        FloatMatrix forwardPass = this.x.mmul(this.W).addRowVector(this.b);
+        return forwardPass;
     }
 
     public FloatMatrix backward(FloatMatrix delta) {

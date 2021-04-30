@@ -3,6 +3,8 @@ import org.jblas.MatrixFunctions;
 import org.jblas.ranges.Range;
 import org.jblas.ranges.RangeUtils;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,12 +49,17 @@ public class MLP {
     }
 
     public FloatMatrix forward(FloatMatrix x) {
-        //Store the output of the MLP in this.output
-        for (int i=0; i<this.linear_layers.size();i++) {
+
+
+        for (int i = 0; i < this.linear_layers.size(); i++) {
             x = this.linear_layers.get(i).forward(x);
             x = this.activations.get(i).forward(x);
         }
-        return x;
+
+        this.output = x;
+
+
+        return this.output;
     }
 
     public void zero_grad() {
@@ -107,12 +114,49 @@ public class MLP {
         Path file = Paths.get(filename);
         int i = 1;
         for (Linear l : this.linear_layers) {
-            lines.add("W #" + String.valueOf(i) + " " + l.W.toString());
-            lines.add("b #" + String.valueOf(i) + " " + l.b.toString());
+            lines.add("W #" + String.valueOf(i) + " " + l.W.toString("%.15f"));
+            lines.add("b #" + String.valueOf(i) + " " + l.b.toString("%.15f"));
             i++;
         }
         Files.write(file, lines,
                 Files.exists(file) ? StandardOpenOption.TRUNCATE_EXISTING : StandardOpenOption.CREATE);
+    }
+
+    public void load(String filename) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        String line = reader.readLine();
+        while (line != null) {
+            String[] splits = line.split(" ", 3);
+            String layerType = splits[0];
+            int layerNum = Integer.parseInt(splits[1].split("#")[1]) - 1;
+            String floatList = splits[2];
+            floatList = floatList.substring(1, floatList.length() - 1) + ";";
+            String[] floats = floatList.split(" ");
+            int numColumns = -1;
+            if (layerType.equalsIgnoreCase("w"))
+                numColumns = this.linear_layers.get(layerNum).W.columns;
+            else if (layerType.equalsIgnoreCase("b"))
+                numColumns = this.linear_layers.get(layerNum).b.columns;
+            int index = 0;
+            int indexRows = 0;
+            float[] tempRow = new float[numColumns];
+            for (String num : floats) {
+                String cleanedFloat = num.substring(0, num.length() - 1);
+                if (num.charAt(num.length() - 1) == ',')
+                    tempRow[index] = Float.parseFloat(cleanedFloat);
+                else if (num.charAt(num.length() - 1) == ';') {
+                    tempRow[index] = Float.parseFloat(cleanedFloat);
+                    if (layerType.equalsIgnoreCase("w"))
+                        this.linear_layers.get(layerNum).W.putRow(indexRows, new FloatMatrix(tempRow).transpose());
+                    else if (layerType.equalsIgnoreCase("b"))
+                        this.linear_layers.get(layerNum).b.putRow(indexRows, new FloatMatrix(tempRow).transpose());
+                    indexRows += 1;
+                    index = -1;
+                }
+                index += 1;
+            }
+            line = reader.readLine();
+        }
     }
 
     public static void main(String args[]) throws IOException {
@@ -127,12 +171,11 @@ public class MLP {
         org.jblas.util.Random.seed(11642);
 
 
-
-       FloatMatrix trainX = FloatMatrix.randn(1000, 784);
-       FloatMatrix trainY = FloatMatrix.randn(1000, 10);
+        FloatMatrix trainX = FloatMatrix.randn(1000, 784);
+        FloatMatrix trainY = FloatMatrix.randn(1000, 10);
 //
-       FloatMatrix valX = FloatMatrix.randn(100, 784);
-       FloatMatrix valY = FloatMatrix.randn(100, 10);
+        FloatMatrix valX = FloatMatrix.randn(100, 784);
+        FloatMatrix valY = FloatMatrix.randn(100, 10);
 
 
         ArrayList<Activation> activations = new ArrayList<>();

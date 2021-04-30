@@ -43,10 +43,11 @@ public class RetrievalModelDRMM {
                 trainRel, trainNonRel, trainIdfWts);
 
         // train
+        System.err.println("start training\n");
         train(params, trainRel, trainNonRel, trainIdfWts);
 
        try {
-           this.mlp.save("wts.txt");
+           this.mlp.save(params.get("drmm:mlpWeightFile"));
        } catch (Exception e) {
            e.printStackTrace();
        }
@@ -134,7 +135,7 @@ public class RetrievalModelDRMM {
                         allFloatMatrix.add(termMatrix);
                         float df = (float) Idx.getDocFreq("title", term);
                         float tmpFloat=Math.max(0.0F,
-                                (float)Math.log((float)(docNum- df + 0.5F) / ( df + 0.5F)));
+                                (float)Math.log((docNum- df + 0.5F) / ( df + 0.5F)));
                         allFloat.add(tmpFloat);
                     }
 
@@ -194,41 +195,27 @@ public class RetrievalModelDRMM {
         int batch_size = 1;
         double[] trainingLosses = new double[num_epochs];
 
+        String[] layerUnits = params.get("drmm:mlpLayers").split(",");
         int nBins = Integer.parseInt(params.get("drmm:numHistogramBins"));
-        String[] activateParam = params.get("drmm:activations").split(",");
-        String[] layerParam = params.get("drmm:mlpLayers").split(",");
-        int[] layerUnits = new int[layerParam.length];
-        for (int i=0;i<layerParam.length;i++) {
-            layerUnits[i] = Integer.parseInt(layerParam[i]);
+        int mlpLayers = layerUnits.length;
+        
+        int[] hiddens = new int[mlpLayers];
+        for (int i=0;i<mlpLayers;i++) {
+            hiddens[i] = Integer.parseInt(layerUnits[i]);
         }
-        float lr = Float.parseFloat(params.get("drmm:learningRate"));
-        int linearSeed = Integer.parseInt(params.get("drmm:linearSeed"));
-        int shuffleSeed = Integer.parseInt(params.get("drmm:linearSeed"));
-
 
         ArrayList<Activation> activations = new ArrayList<>();
-        for (String tmp: activateParam) {
-            switch (tmp.toLowerCase().trim()) {
-                case "sigmoid":
-                    activations.add(new Sigmoid());
-                    break;
-                case "identity":
-                    activations.add(new Identity());
-                    break;
-                case "tanh":
-                    activations.add(new Tanh());
-                    break;
-                case "relu":
-                    activations.add(new ReLU());
-                    break;
-                default:
-                    System.out.println("Unknown activation: "+tmp);
-            }
+        for (int i=0;i<mlpLayers;i++) {
+            activations.add(new Tanh());
         }
         activations.add(new Identity());
 
+        float lr = 0.01F;
+        int linearSeed = Integer.parseInt(params.get("drmm:randomSeed"));
+        int shuffleSeed = Integer.parseInt(params.get("drmm:randomSeed"));
+
         //MLP mlp = new MLP(784, 10, new int[]{512, 256, 128}, activations, new SoftmaxCrossEntropy(), 0.01F);
-        MLP mlp = new MLP(nBins, 1, layerUnits, activations, lr, linearSeed);
+        MLP mlp = new MLP(nBins, 1, hiddens, activations, lr, linearSeed);
         this.mlp = mlp;
         WeightedSum wtdSum = new WeightedSum();
         this.wtdSum = wtdSum;
@@ -317,7 +304,7 @@ public class RetrievalModelDRMM {
                             allFloatMatrix.add(termMatrix);
                             float df = (float) Idx.getDocFreq("title", term);
                             float tmpFloat=Math.max(0.0F,
-                                    (float)Math.log((float)(docNum- df + 0.5F) / ( df + 0.5F)));
+                                    (float)Math.log((docNum- df + 0.5F) / ( df + 0.5F)));
                             allFloat.add(tmpFloat);
                         }
 
@@ -341,29 +328,103 @@ public class RetrievalModelDRMM {
             }
         } catch (Exception e) {e.printStackTrace();}
 
-
-
-        boolean isStrat = params.get("drmm:samplingStrategy").toLowerCase().equals("stratified");
         int numTrainingPairs = Integer.parseInt(params.get("drmm:numTrainingPairs"));
         Random random = new Random(Integer.parseInt(params.get("drmm:randomSeed")));
 
-        while (trainRel.size() < numTrainingPairs) {
-
-            int docBound=0, docBase=0;
-            if (isStrat) {
-                int tmp = random.nextInt(100) %3;
-                if (tmp==0) {
-                    docBound = 10;
-                    docBase = 0;
-                } else if (tmp==1) {
-                    docBound = 40;
-                    docBase = 10;
-                } else {
-                    docBound = 50;
-                    docBase = 50;
-                }
+        String sampleFileName = params.get("drmm:sampleFile");
+        boolean isSampleExist = (new File(sampleFileName)).exists();
+        String binFileName = params.get("drmm:binWeightFile");
+        BufferedWriter output2 = null;
+        BufferedWriter output1 = null;
+    
+        try {
+            if (!isSampleExist) {
+                output1 = new BufferedWriter(new FileWriter(sampleFileName, false));
             }
+            output2 = new BufferedWriter(new FileWriter(binFileName, false));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        if (isSampleExist) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(sampleFileName));
+                String line;
+                while ((line = reader.readLine())!=null) {
+                    String[] info = line.split("[,\\' \\']");
+                    String qid = info[0];
+                    ScoreList curScoreList = trainScoreLists.get(qid);
+                    Map<Integer, Integer> curRelList = trainRelLists.get(qid);
+                    String externalId1 = info[1];
+                    String externalId2 = info[2];
+                    System.err.printf("doc name: %s, %s.", externalId1, externalId2);
+                    
+                    
+                    int docId1 = Idx.getInternalDocid(externalId1);
+                    int docId2 = Idx.getInternalDocid(externalId2);
+
+                    int rel1 = curRelList.getOrDefault(docId1, 0);
+                    int rel2 = curRelList.getOrDefault(docId2, 0);
+
+                    TermVector vec1 = new TermVector(docId1, "title");
+                    TermVector vec2 = new TermVector(docId2, "title");
+                    List<FloatMatrix> mat1 = new ArrayList<>();
+                    List<FloatMatrix> mat2 = new ArrayList<>();
+                    List<String> toks1 = new ArrayList<>();
+                    List<String> toks2 = new ArrayList<>();
+    
+                    for (int i=0;i<vec1.positionsLength();i++) {
+                        if (vec1.stemString(vec1.stemAt(i))!=null)
+                            toks1.add(vec1.stemString(vec1.stemAt(i)));
+                    }
+    
+                    String[] newToks1 = QryParser.tokenizeString(String.join(" ", toks1));
+                    for (String w:newToks1) {
+                        FloatMatrix tmp = IdxWordvec.get(w);
+                        if (tmp!=null) mat1.add(tmp);
+                    }
+    
+                    for (int i=0;i<vec2.positionsLength();i++) {
+                        if (vec2.stemString(vec2.stemAt(i))!=null)
+                            toks2.add(vec2.stemString(vec2.stemAt(i)));
+                    }
+                    String[] newToks2 = QryParser.tokenizeString(String.join(" ", toks2));
+                    for (String w:newToks2) {
+                        FloatMatrix tmp = IdxWordvec.get(w);
+                        if (tmp!=null) mat2.add(tmp);
+                    }
+    
+                    if (mat1.size()==0 || mat2.size()==0) {continue;}
+                    FloatMatrix qMatrix = queryMatrix.get(qid);
+                    FloatMatrix bin1 = getBin(params, mat1, qMatrix);
+                    FloatMatrix bin2 = getBin(params, mat2, qMatrix);
+                    if (rel1 > rel2) {
+                        trainRel.add(bin1);
+                        trainNonRel.add(bin2);
+                    } else {
+                        trainRel.add(bin2);
+                        trainNonRel.add(bin1);
+                    }
+                    trainIdfWts.add(idfWtsMatrix.get(qid));
+
+                    // PrintOut bins
+                    output2.write(idfWtsMatrix.get(qid).toString("%.10f")+"\n");
+                    if (rel1>rel2) {
+                        output2.write(bin1.toString("%.10f")+"\n");
+                        output2.write(bin2.toString("%.10f")+"\n");
+                    } else {
+                        output2.write(bin2.toString("%.10f")+"\n");
+                        output2.write(bin1.toString("%.10f")+"\n");
+                    }
+
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        while (trainRel.size() < numTrainingPairs) {
 
             int queryId = random.nextInt(trainQids.size());
             String qid = trainQids.get(queryId);
@@ -371,32 +432,11 @@ public class RetrievalModelDRMM {
             Map<Integer, Integer> curRelList = trainRelLists.get(qid);
 
 
-            if (isStrat) {
-                if (curScoreList.size()-docBase<0) {continue;}
-                docBound = Math.min(docBound, curScoreList.size()-docBase);
-            } else {
-                docBound = curScoreList.size();
-                docBase = 0;
-            }
-
-//            System.out.println(trainRel.size());
-            Set<Integer> all = new HashSet<>();
-            for (int j=docBase;j<docBound+docBase;j++) {
-                all.add(curRelList.getOrDefault(curScoreList.getDocid(j), 0));
-            }
-            if (all.size()==1) continue;
-
             int docId1=0, docId2=0, rel1=0, rel2=0;
-//            System.out.println("=====");
-//            System.out.println(trainRel.size());
-//            System.out.println(queryId);
-//            System.out.println(curScoreList.size());
-
-
 
             while (docId1==docId2 || rel1==rel2) {
-                docId1 = curScoreList.getDocid(random.nextInt(docBound) + docBase);
-                docId2 = curScoreList.getDocid(random.nextInt(docBound) + docBase);
+                docId1 = curScoreList.getDocid(random.nextInt(curScoreList.size()));
+                docId2 = curScoreList.getDocid(random.nextInt(curScoreList.size()));
                 rel1 = curRelList.getOrDefault(docId1, 0);
                 rel2 = curRelList.getOrDefault(docId2, 0);
             }
@@ -448,35 +488,39 @@ public class RetrievalModelDRMM {
                 trainIdfWts.add(idfWtsMatrix.get(qid));
 
 
-//                // PrintOut sample
-//                BufferedWriter output1 = new BufferedWriter(new FileWriter("sample.txt", true));
-//                String line1;
-//                if (rel1>rel2) {
-//                    line1 = String.format("%s,%s # %d\n", Idx.getExternalDocid(docId1),
-//                            Idx.getExternalDocid(docId2), trainRel.size()-1);
-//                } else {
-//                    line1 = String.format("%s,%s # %d\n", Idx.getExternalDocid(docId2),
-//                            Idx.getExternalDocid(docId1), trainRel.size()-1);
-//                }
-//                output1.write(line1);
-//                output1.close();
+               // PrintOut sample
+               String line1;
+               if (rel1>rel2) {
+                   line1 = String.format("%s,%s # %d\n", Idx.getExternalDocid(docId1),
+                           Idx.getExternalDocid(docId2), trainRel.size()-1);
+               } else {
+                   line1 = String.format("%s,%s # %d\n", Idx.getExternalDocid(docId2),
+                           Idx.getExternalDocid(docId1), trainRel.size()-1);
+               }
+               output1.write(line1);
 
+               // PrintOut bins
+               output2.write(idfWtsMatrix.get(qid).toString("%.10f")+"\n");
+               if (rel1>rel2) {
+                   output2.write(bin1.toString("%.10f")+"\n");
+                   output2.write(bin2.toString("%.10f")+"\n");
+               } else {
+                   output2.write(bin2.toString("%.10f")+"\n");
+                   output2.write(bin1.toString("%.10f")+"\n");
+               }
 
-//                // PrintOut bins
-//                BufferedWriter output2 = new BufferedWriter(new FileWriter("bin.txt", true));
-//                if (rel1>rel2) {
-//                    output2.write(bin1.toString("%.15f")+"\n");
-//                    output2.write(bin2.toString("%.15f")+"\n");
-//                } else {
-//                    output2.write(bin2.toString("%.15f")+"\n");
-//                    output2.write(bin1.toString("%.15f")+"\n");
-//                }
-//                output2.write(idfWtsMatrix.get(qid).toString("%.15f")+"\n");
-//                output2.close();
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        try {
+            if (output1!=null) {
+                output1.close();
+            }
+            output2.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -491,9 +535,9 @@ public class RetrievalModelDRMM {
             for (FloatMatrix m: mat) {
 //                System.out.printf("%d,%d\n", row.rows, row.columns);
 //                System.out.printf("%d,%d\n", m.rows, m.columns);
-                float s = (float) SimpleBlas.dot(row,m) /
-                        ((float) SimpleBlas.nrm2(row) *
-                        (float) SimpleBlas.nrm2(m));
+                float s =  SimpleBlas.dot(row,m) /
+                        ( SimpleBlas.nrm2(row) *
+                         SimpleBlas.nrm2(m));
                 if (s>=0.99999F) {
                     bin.put(nBins-1, bin.get(nBins-1)+1);
                 } else {
@@ -503,7 +547,7 @@ public class RetrievalModelDRMM {
             }
             for (int j=0;j<nBins;j++) {
                 if (bin.get(j)>0F)
-                    bin.put(j, (float)Math.log((float)bin.get(j)));
+                    bin.put(j, (float)Math.log(bin.get(j)));
             }
             res.putRow(i, bin);
         }

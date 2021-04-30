@@ -10,7 +10,6 @@ public class Tanh extends Activation {
     public FloatMatrix forward(FloatMatrix x) {
         this.state = MatrixFunctions.tanh(x);
         return this.state;
-
     }
 
     public FloatMatrix derivative() {
