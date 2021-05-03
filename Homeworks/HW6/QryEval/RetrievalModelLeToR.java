@@ -21,7 +21,6 @@ public class RetrievalModelLeToR extends RetrievalModel {
   double BM25k1, BM25b, BM25k3;
   double IndriMu, IndriLambda;
   Set<Integer> disable;
-
   RetrievalModelLeToR(Map<String, String> parameters) {
     BM25k1 = Double.parseDouble(parameters.get("BM25:k_1"));
     BM25b = Double.parseDouble(parameters.get("BM25:b"));
@@ -288,6 +287,7 @@ public class RetrievalModelLeToR extends RetrievalModel {
         String qQid = qToken[0].trim();
         String[] qrelToken = qrelLine.split(" ");
         String qrelQid = qrelToken[0].trim();
+
         if (qQid.equals(qrelQid)) {
           String query = qToken[1].trim();
           String externalDocid = qrelToken[2].trim();
